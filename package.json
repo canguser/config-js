@@ -1,0 +1,17 @@
+{
+  "name": "@palerock/config-js",
+  "version": "1.0.0",
+  "main": "main/config.js",
+  "module": "main/config.js",
+  "author": "Cangshi",
+  "license": "MIT",
+  "types": "types/index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "run-publish": "yarn publish --access public"
+  },
+  "devDependencies": {
+    "jest": "^26.6.3"
+  }
+}

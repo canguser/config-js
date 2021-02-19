@@ -1,0 +1,1 @@
+export function configure(config: any, provider?: Object): any;
