@@ -34,6 +34,10 @@ function _parseConfig(
                 $root: root
             };
 
+            if (parent) {
+                localProvider.$grandparent = parent.$parent;
+            }
+
             if (hasEnumerableProperty(localProvider, p) && localProvider[p]) {
                 return localProvider[p];
             } else if (hasEnumerableProperty(provider, p)) {
