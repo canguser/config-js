@@ -4,7 +4,7 @@ module.exports = {
     coverageDirectory: 'dist/test-coverage',
     coverageReporters: ['html', 'text'],
     collectCoverageFrom: [
-        '<rootDir>//main/**/*.js',
+        '<rootDir>/main/**/*.js',
     ],
     rootDir: __dirname
 };

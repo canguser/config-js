@@ -86,15 +86,14 @@ describe('config-js tests', () => {
 
     });
 
-    it('should parse configuration inner object with $root, $parent and $grandparent', function () {
+    it('should parse configuration inner object with $root, $parent', function () {
         const config = {
             name: 'Smith',
             isAlive: true,
             school: {
                 schoolName: 'Health None',
                 studentCalledName: ({$root, schoolName}) => $root.name + schoolName,
-                studentCalledName1: ({$parent, schoolName}) => $parent.$parent.name + schoolName,
-                studentCalledName2: ({$grandparent, schoolName}) => $grandparent.name + schoolName
+                studentCalledName1: ({$parent, schoolName}) => $parent.name + schoolName,
             },
             calledName() {
                 return this.school.studentCalledName;
@@ -106,6 +105,5 @@ describe('config-js tests', () => {
         expect(parsedConfig.calledName).toBe(config.name + config.school.schoolName);
         expect(parsedConfig.school.studentCalledName).toBe(config.name + config.school.schoolName);
         expect(parsedConfig.school.studentCalledName1).toBe(config.name + config.school.schoolName);
-        expect(parsedConfig.school.studentCalledName2).toBe(config.name + config.school.schoolName);
     });
 });
