@@ -4,6 +4,8 @@
 
 ## Sample and usage are shown with following testing
 
+[Live Demo](https://runkit.com/canguser/602f5af66c5fc2001babc02e)
+
 ```javascript
 const configJS = require('../config');
 
