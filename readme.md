@@ -115,5 +115,56 @@ describe('config-js tests', () => {
         expect(parsedConfig.school.studentCalledName).toBe(config.name + config.school.schoolName);
         expect(parsedConfig.school.studentCalledName1).toBe(config.name + config.school.schoolName);
     });
+
+    it('should not cacheable working', function () {
+        const config = {
+            name: 'Smith',
+            isAlive: true,
+            school: {
+                schoolName: 'Health None',
+                studentCalledName: ({$root, schoolName}) => {
+                    expect(schoolName).toBe('Health None');
+                    return $root.name + schoolName;
+                },
+            },
+            calledName() {
+                expect(this.school.studentCalledName).toBe(this.name + this.school.schoolName);
+                return this.school.studentCalledName;
+            }
+        };
+        const parsedConfig = configJS.configure(config, {}, {cacheable: false});
+
+        expect(parsedConfig.calledName).toBe(config.name + config.school.schoolName);
+        expect(parsedConfig.school.studentCalledName).toBe(config.name + config.school.schoolName);
+        // school.studentCalledName called:  3 times
+        // calledName called:                1 time
+        // outer expect:                     2 times
+        expect.assertions(3 + 1 + 2);
+
+    });
+
+    it('should cacheable working', function () {
+        const config = {
+            name: 'Smith',
+            isAlive: true,
+            school: {
+                schoolName: 'Health None',
+                studentCalledName: ({$root, schoolName}) => {
+                    expect(schoolName).toBe('Health None');
+                    return $root.name + schoolName;
+                },
+            },
+            calledName() {
+                expect(this.school.studentCalledName).toBe(this.name + this.school.schoolName);
+                return this.school.studentCalledName;
+            }
+        };
+        const parsedConfig = configJS.configure(config, {}, {cacheable: true});
+
+        expect(parsedConfig.calledName).toBe(config.name + config.school.schoolName);
+        expect(parsedConfig.school.studentCalledName).toBe(config.name + config.school.schoolName);
+        expect.assertions(4)
+
+    });
 });
 ```
