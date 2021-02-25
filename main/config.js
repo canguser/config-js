@@ -33,9 +33,11 @@ function _parseConfig(
         {
             get: (target, p, receiver) => {
                 const originTarget = target.origin;
-                let expectValue = originTarget[p];
-                let cache = target._cache || {};
+                const cache = target._cache || {};
                 const cacheProperty = '_' + p;
+
+                // get the default value
+                let expectValue = originTarget[p];
 
                 // define the local provider
                 root = root || receiver;
@@ -44,26 +46,32 @@ function _parseConfig(
                     $root: root
                 };
 
+                // check if in local provider
                 if (hasEnumerableProperty(localProvider, p) && localProvider[p]) {
                     return localProvider[p];
                 }
 
+                // check if already in the cache
                 if (hasEnumerableProperty(cache, cacheProperty) && cacheable) {
                     return cache[cacheProperty];
                 }
 
+                // check if in the custom provider
                 if (hasEnumerableProperty(provider, p)) {
                     expectValue = provider[p];
                 } else if (!hasEnumerableProperty(originTarget, p)) {
+                    // if not in the provider & may be un-enumerable value
                     // sometimes appeared Array or others
                     return expectValue;
                 }
 
+                // convert all value into function
                 let expectFunc = expectValue;
                 if (typeof expectFunc !== 'function') {
                     expectFunc = () => expectValue;
                 }
 
+                // build the function with specific params
                 const expectResultFunc = () => _parseConfig(
                     expectFunc.call(receiver, receiver),
                     provider, {
@@ -71,8 +79,10 @@ function _parseConfig(
                     }
                 );
 
+                // get the real return value
                 const returnValue = expectResultFunc();
 
+                // if open cache, put the value into cache
                 if (cacheable) {
                     cache[cacheProperty] = returnValue;
                     target._cache = cache;
@@ -87,7 +97,7 @@ function _parseConfig(
             has(target, p) {
                 return Reflect.has(config, p);
             },
-            ownKeys(target) {
+            ownKeys() {
                 return Reflect.ownKeys(config);
             }
         });
@@ -105,8 +115,8 @@ function _parseConfig(
 
 }(typeof window !== "undefined" ? window : this, function (_global, noGlobal) {
     const configJS = {
-        configure: function (config, provider) {
-            return _parseConfig(config, provider);
+        configure: function (config, provider, options = {}) {
+            return _parseConfig(config, provider, options);
         }
     };
     if (!noGlobal) {
