@@ -1,1 +1,5 @@
-export function configure(config: any, provider?: Object): any;
+interface ConfigJSOptions {
+    cacheable?: boolean
+}
+
+export function configure(config: any, provider?: Object, options?: ConfigJSOptions): any;
