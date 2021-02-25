@@ -9,13 +9,15 @@ function hasEnumerableProperty(target, p) {
  * @param provider
  * @param root
  * @param parent
+ * @param cacheable
  * @return {*}
  */
 function _parseConfig(
     config, provider = {},
     {
         root,
-        parent
+        parent,
+        cacheable = true
     } = {}
 ) {
     if (typeof config !== 'object' || !config || config instanceof Date) {
@@ -23,41 +25,72 @@ function _parseConfig(
     }
 
     provider = {...provider};
-    return new Proxy(config, {
-        get: (target, p, receiver) => {
-            let expectValue = target[p];
-
-            // define the local provider
-            root = root || receiver;
-            const localProvider = {
-                $parent: parent,
-                $root: root
-            };
-
-            if (hasEnumerableProperty(localProvider, p) && localProvider[p]) {
-                return localProvider[p];
-            } else if (hasEnumerableProperty(provider, p)) {
-                expectValue = provider[p];
-            } else if (!hasEnumerableProperty(target, p)) {
-                // sometimes appeared Array or others
-                return expectValue;
-            }
-
-            let expectFunc = expectValue;
-            if (typeof expectFunc !== 'function') {
-                expectFunc = () => expectValue;
-            }
-            // add $parent to provider
-            const expectResultFunc = () => _parseConfig(
-                expectFunc.call(receiver, receiver),
-                provider, {
-                    root, parent: receiver
-                }
-            );
-            return expectResultFunc();
+    return new Proxy(
+        {
+            origin: config,
+            _cache: {}
         },
-        set: () => false
-    });
+        {
+            get: (target, p, receiver) => {
+                const originTarget = target.origin;
+                let expectValue = originTarget[p];
+                let cache = target._cache || {};
+                const cacheProperty = '_' + p;
+
+                // define the local provider
+                root = root || receiver;
+                const localProvider = {
+                    $parent: parent,
+                    $root: root
+                };
+
+                if (hasEnumerableProperty(localProvider, p) && localProvider[p]) {
+                    return localProvider[p];
+                }
+
+                if (hasEnumerableProperty(cache, cacheProperty) && cacheable) {
+                    return cache[cacheProperty];
+                }
+
+                if (hasEnumerableProperty(provider, p)) {
+                    expectValue = provider[p];
+                } else if (!hasEnumerableProperty(originTarget, p)) {
+                    // sometimes appeared Array or others
+                    return expectValue;
+                }
+
+                let expectFunc = expectValue;
+                if (typeof expectFunc !== 'function') {
+                    expectFunc = () => expectValue;
+                }
+
+                const expectResultFunc = () => _parseConfig(
+                    expectFunc.call(receiver, receiver),
+                    provider, {
+                        root, parent: receiver, cacheable
+                    }
+                );
+
+                const returnValue = expectResultFunc();
+
+                if (cacheable) {
+                    cache[cacheProperty] = returnValue;
+                    target._cache = cache;
+                }
+
+                return returnValue;
+            },
+            set: () => false,
+            getOwnPropertyDescriptor(target, p) {
+                return Reflect.getOwnPropertyDescriptor(config, p);
+            },
+            has(target, p) {
+                return Reflect.has(config, p);
+            },
+            ownKeys(target) {
+                return Reflect.ownKeys(config);
+            }
+        });
 }
 
 (function (global, factory) {
